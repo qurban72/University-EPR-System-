@@ -82,7 +82,7 @@ st.markdown(f"""
 # ============================================================================
 # 5. KEY INSTUTIONAL METRICS
 # ============================================================================
-st.subheader("📊 University at a Glance")
+st.subheader("📊  At a Glance")
 
 col1, col2, col3, col4 = st.columns(4)
 
