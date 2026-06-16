@@ -386,4 +386,96 @@ def main():
             st.plotly_chart(fig_rev, use_container_width=True)
             
         with fin_cols[1]:
-            st.markdown("#### 💸 Institutional Collection R
+            st.markdown("#### 💸 Institutional Collection Ratios")
+            # Donut distribution overview
+            outstanding_val = gross_revenue - collected_fee
+            fig_donut = px.pie(
+                names=['Liquidity Realized', 'Outstanding Receivables'],
+                values=[collected_fee, outstanding_val],
+                hole=0.5,
+                color_discrete_sequence=['#a5d6a7', '#ef9a9a']
+            )
+            fig_donut.update_layout(height=450, showlegend=True, paper_bgcolor='rgba(0,0,0,0)')
+            st.plotly_chart(fig_donut, use_container_width=True)
+
+    # ============================================================================
+    # TAB VIEW 3: ACADEMIC QUALITY PROFILE MATRIX
+    # ============================================================================
+    elif menu_tabs == "Academic Profiles":
+        st.markdown("### 🎓 Institutional Intelligence & Academic Assessment Profiles")
+        
+        acad_cols = st.columns(2)
+        
+        with acad_cols[0]:
+            st.markdown("#### 📈 Cumulative Student GPA Density Vector Distribution")
+            # Trend Profile distributions density curve mapping 
+            fig_gpa = px.histogram(
+                df_filtered, 
+                x='gpa', 
+                nbins=30, 
+                color_discrete_sequence=['#b3e5fc'],
+                marginal="box"
+            )
+            fig_gpa.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=450)
+            st.plotly_chart(fig_gpa, use_container_width=True)
+            
+        with acad_cols[1]:
+            st.markdown("#### ⏳ Institutional Engagement Framework Analysis")
+            # Box distributions analyzing Department vs Attendance metrics
+            fig_box = px.box(
+                df_filtered,
+                x='department',
+                y='attendance',
+                color='department',
+                color_discrete_sequence=px.colors.pastel.Pastel1
+            )
+            fig_box.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', height=450, showlegend=False)
+            st.plotly_chart(fig_box, use_container_width=True)
+
+    # ============================================================================
+    # TAB VIEW 4: STRATEGIC DEPARTMENTAL DATA MATRIX GRID
+    # ============================================================================
+    elif menu_tabs == "Departmental Grid":
+        st.markdown("### 🏢 Departmental Matrix Scorecard")
+        
+        # Algorithmic compilation grouping processing of operations
+        dept_summary = df_filtered.groupby('department').agg(
+            Enrolled_Students=('student_id', 'count'),
+            Average_GPA=('gpa', 'mean'),
+            Attendance_Rate=('attendance', 'mean'),
+            Target_Revenue=('fee_allocated', 'sum'),
+            Collected_Revenue=('fee_collected', 'sum')
+        ).reset_index()
+        
+        # Formatting computations
+        dept_summary['Collection_Efficiency'] = (dept_summary['Collected_Revenue'] / dept_summary['Target_Revenue'] * 100).round(2).astype(str) + '%'
+        dept_summary['Average_GPA'] = dept_summary['Average_GPA'].round(2)
+        dept_summary['Attendance_Rate'] = dept_summary['Attendance_Rate'].round(1).astype(str) + '%'
+        dept_summary['Target_Revenue'] = dept_summary['Target_Revenue'].map('${:,.2f}'.format)
+        dept_summary['Collected_Revenue'] = dept_summary['Collected_Revenue'].map('${:,.2f}'.format)
+        
+        # Displaying Core Matrix Architecture
+        st.dataframe(dept_summary, use_container_width=True, hide_index=True)
+        
+        # System Executive Level Data Export Control Matrix Architecture Block
+        st.markdown("---")
+        st.markdown("#### 📥 Secure Audit Logging Export Module")
+        csv_buffer = df_filtered.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="🔒 Export Comprehensive Audit Data Stream as CSV",
+            data=csv_buffer,
+            file_name=f"EXECUTIVE_AUDIT_LOG_{datetime.now().strftime('%Y%m%d')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+
+    # Footer Design Pattern Architecture Implementation
+    st.markdown("""
+        <div class='footer'>
+            <p><strong>University Enterprise Resource Planning System (ERP)</strong></p>
+            <p style='font-size:0.8rem;'>Protected Under Institutional Cryptographic Architecture Level V Enterprise Governance Suite</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    main()
