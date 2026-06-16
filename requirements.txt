@@ -8,3 +8,4 @@ psycopg2-binary>=2.9.12
 sqlalchemy>=2.0.35
 streamlit-option_menu
 python-dotenv>=1.0.0
+scipy
