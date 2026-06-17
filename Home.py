@@ -115,14 +115,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Branded Main Header UI HTML
-st.markdown(f"""
-    <div class="main-header">
-        <img src="{logo_html_src}" class="header-logo">
-        <h1 class="header-title">Technify ERP System</h1>
-        <div class="header-subtitle">Academic Analytics & Business Intelligence Dashboard</div>
-    </div>
-""", unsafe_allow_html=True)
+
 # ============================================================================
 # 4. BRANDED MAIN HEADER UI
 # ============================================================================
