@@ -4,11 +4,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime, timedelta
+from datetime import datetime
 import psycopg2
 from streamlit_option_menu import option_menu
-import plotly.figure_factory as ff
-from scipy import stats
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -88,8 +86,9 @@ st.markdown("""
         border-radius: 20px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         text-align: center;
-        border-top: 3px solid #a8e6cf;
-        transition: transform 0.2s ease;
+        border-top: 4px solid #a8e6cf;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 1rem;
     }
     
     .metric-card:hover {
@@ -99,19 +98,22 @@ st.markdown("""
     
     .metric-card h3 {
         color: #7a9cbb !important;
-        margin: 0;
-        font-size: 0.85rem;
+        margin: 0 !important;
+        font-size: 0.95rem !important;
         letter-spacing: 0.5px;
     }
     
     .metric-card h2 {
         color: #3a7ca5 !important;
-        margin: 0.5rem 0;
-        font-size: 2rem;
+        margin: 0.5rem 0 !important;
+        font-size: 2.2rem !important;
+        font-weight: 600 !important;
     }
     
     .metric-card p {
         color: #8aaec9 !important;
+        margin: 0 !important;
+        font-size: 0.85rem !important;
     }
     
     /* Info Box - Soft pastel */
@@ -242,21 +244,14 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ============================================================================
-# ADVANCED FEATURES: REAL-TIME CLOCK & ANIMATIONS
-# ============================================================================
-
 def get_live_datetime():
-    """Get current datetime for real-time display"""
     return datetime.now().strftime("%A, %B %d, %Y | %I:%M:%S %p")
 
 # ============================================================================
 # DATABASE CONNECTION
 # ============================================================================
-
 @st.cache_resource
 def get_db_connection():
-    """Connect to Supabase PostgreSQL database"""
     try:
         conn = psycopg2.connect(
             dbname="postgres",
@@ -273,7 +268,6 @@ def get_db_connection():
 
 @st.cache_data(ttl=300)
 def load_examination_data(_conn, table_name):
-    """Load ALL examination data from database - NO LIMITS"""
     try:
         cursor = _conn.cursor()
         cursor.execute(f'SELECT COUNT(*) FROM "{table_name}"')
@@ -283,12 +277,6 @@ def load_examination_data(_conn, table_name):
         
         query = f'SELECT * FROM "{table_name}"'
         df = pd.read_sql(query, _conn)
-        
-        if len(df) == total_rows:
-            st.sidebar.success(f"✅ Loaded ALL {len(df):,} records!")
-        else:
-            st.sidebar.warning(f"⚠️ Loaded {len(df):,} of {total_rows:,} records")
-        
         return df, len(df)
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
@@ -297,9 +285,7 @@ def load_examination_data(_conn, table_name):
 # ============================================================================
 # ADVANCED DATA PROCESSING
 # ============================================================================
-
 def process_examination_data(df):
-    """Advanced data processing with ML-like features"""
     if df is None or df.empty:
         return None
     
@@ -323,11 +309,6 @@ def process_examination_data(df):
         'A+' if x >= 90 else 'A' if x >= 80 else 'B+' if x >= 70 else 
         'B' if x >= 60 else 'C' if x >= 50 else 'D' if x >= 40 else 'F')
     
-    df_processed['performance_tier'] = df_processed['marks'].apply(lambda x:
-        'Outstanding' if x >= 85 else 'Excellent' if x >= 75 else 
-        'Good' if x >= 60 else 'Satisfactory' if x >= 50 else 
-        'Needs Improvement' if x >= 40 else 'Critical')
-    
     if 'student_id' not in df_processed.columns:
         df_processed['student_id'] = [f"S{abs(hash(str(i)))%10000:04d}" for i in range(len(df_processed))]
     if 'course_name' not in df_processed.columns:
@@ -342,61 +323,36 @@ def process_examination_data(df):
 # ============================================================================
 # ADVANCED ANALYTICS FUNCTIONS
 # ============================================================================
-
 def calculate_advanced_metrics(df):
-    metrics = {
+    return {
         'pass_rate': (df['marks'] >= 40).mean() * 100,
-        'fail_rate': (df['marks'] < 40).mean() * 100,
-        'distinction_rate': (df['marks'] >= 75).mean() * 100,
-        'first_class_rate': ((df['marks'] >= 60) & (df['marks'] < 75)).mean() * 100,
         'avg_marks': df['marks'].mean(),
-        'median_marks': df['marks'].median(),
-        'std_dev': df['marks'].std(),
-        'skewness': df['marks'].skew(),
-        'kurtosis': df['marks'].kurtosis(),
         'highest': df['marks'].max(),
-        'lowest': df['marks'].min(),
-        'q1': df['marks'].quantile(0.25),
-        'q3': df['marks'].quantile(0.75),
-        'iqr': df['marks'].quantile(0.75) - df['marks'].quantile(0.25)
+        'lowest': df['marks'].min()
     }
-    return metrics
 
 def calculate_performance_score(df):
     pass_rate = (df['marks'] >= 40).mean() * 100
     avg_marks = df['marks'].mean()
     distinction_rate = (df['marks'] >= 75).mean() * 100
-    score = (pass_rate * 0.5) + (avg_marks * 0.3) + (distinction_rate * 0.2)
-    return min(100, score)
-
-def identify_outliers(df):
-    Q1 = df['marks'].quantile(0.25)
-    Q3 = df['marks'].quantile(0.75)
-    IQR = Q3 - Q1
-    lower_bound = Q1 - 1.5 * IQR
-    upper_bound = Q3 + 1.5 * IQR
-    outliers = df[(df['marks'] < lower_bound) | (df['marks'] > upper_bound)]
-    return outliers, lower_bound, upper_bound
+    return min(100, (pass_rate * 0.5) + (avg_marks * 0.3) + (distinction_rate * 0.2))
 
 def generate_trend_forecast(df):
     semester_avg = df.groupby('semester')['marks'].mean()
     if len(semester_avg) >= 2:
         trend = semester_avg.diff().mean()
-        last_avg = semester_avg.iloc[-1]
-        forecast = last_avg + trend
+        forecast = semester_avg.iloc[-1] + trend
         return max(0, min(100, forecast)), trend
     return df['marks'].mean(), 0
 
 # ============================================================================
-# ADVANCED VISUALIZATIONS
+# ADVANCED VISUALIZATIONS (PASTEL THEMING APPLIED HERE)
 # ============================================================================
-
 def create_gauge_chart(value, title, max_value=100):
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=value,
-        title={'text': title, 'font': {'size': 20, 'color': '#5a8bb5'}},
-        delta={'reference': 75, 'increasing': {'color': "#8fc9a8"}, 'decreasing': {'color': "#e8aaaa"}},
+        title={'text': title, 'font': {'size': 16, 'color': '#3a7ca5'}},
         gauge={
             'axis': {'range': [None, max_value], 'tickwidth': 1, 'tickcolor': "#8aaec9"},
             'bar': {'color': "#7acce0"},
@@ -404,18 +360,13 @@ def create_gauge_chart(value, title, max_value=100):
             'borderwidth': 1,
             'bordercolor': "#d4e6f0",
             'steps': [
-                {'range': [0, 40], 'color': '#ffe8e8'},
-                {'range': [40, 75], 'color': '#fff8e0'},
-                {'range': [75, 100], 'color': '#e8f8f0'}
-            ],
-            'threshold': {
-                'line': {'color': "#e88a8a", 'width': 3},
-                'thickness': 0.75,
-                'value': 40
-            }
+                {'range': [0, 40], 'color': '#ffe6f0'},
+                {'range': [40, 75], 'color': '#fff8e7'},
+                {'range': [75, 100], 'color': '#a8e6cf'}
+            ]
         }
     ))
-    fig.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20), paper_bgcolor='rgba(0,0,0,0)')
+    fig.update_layout(height=220, margin=dict(l=20, r=20, t=30, b=20), paper_bgcolor='rgba(0,0,0,0)', font_color='#5a7d9a')
     return fig
 
 def create_advanced_donut_chart(df):
@@ -425,8 +376,7 @@ def create_advanced_donut_chart(df):
     outstanding = (df['marks'] >= 85).sum()
     excellent = ((df['marks'] >= 75) & (df['marks'] < 85)).sum()
     good = ((df['marks'] >= 60) & (df['marks'] < 75)).sum()
-    satisfactory = ((df['marks'] >= 50) & (df['marks'] < 60)).sum()
-    needs_improvement = ((df['marks'] >= 40) & (df['marks'] < 50)).sum()
+    satisfactory = ((df['marks'] >= 40) & (df['marks'] < 60)).sum()
     critical = (df['marks'] < 40).sum()
     
     fig = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
@@ -434,38 +384,36 @@ def create_advanced_donut_chart(df):
     fig.add_trace(go.Pie(
         labels=['Pass', 'Fail'],
         values=[pass_count, fail_count],
-        marker_colors=['#8fc9a8', '#e8aaaa'],
-        hole=0.4,
+        marker_colors=['#a8e6cf', '#ffe6f0'],
+        hole=0.45,
         name="Pass/Fail",
-        domain={'row': 0, 'column': 0},
-        textinfo='percent+label',
-        textfont_color='#5a7d9a'
+        textinfo='percent+label'
     ), 1, 1)
     
     fig.add_trace(go.Pie(
-        labels=['Outstanding', 'Excellent', 'Good', 'Satisfactory', 'Needs Improvement', 'Critical'],
-        values=[outstanding, excellent, good, satisfactory, needs_improvement, critical],
-        marker_colors=['#8fc9a8', '#a8d5b8', '#7acce0', '#e8c38a', '#e8aa8a', '#e8aaaa'],
-        hole=0.5,
-        name="Performance Tiers",
-        domain={'row': 0, 'column': 1},
-        textinfo='percent+label',
-        textfont_color='#5a7d9a'
+        labels=['Outstanding', 'Excellent', 'Good', 'Satisfactory', 'Critical'],
+        values=[outstanding, excellent, good, satisfactory, critical],
+        marker_colors=['#a8e6cf', '#b8dff0', '#7acce0', '#fff8e7', '#ffe6f0'],
+        hole=0.45,
+        name="Tiers",
+        textinfo='percent'
     ), 1, 2)
     
     fig.update_layout(
-        title_text="<b>Performance Distribution & Tiers</b>",
-        title_font_color='#3a7ca5',
-        height=400,
-        showlegend=False,
-        paper_bgcolor='rgba(0,0,0,0)'
+        title_text="<b>Performance Distribution Metrics</b>",
+        title_font=dict(size=16, color='#3a7ca5'),
+        height=350,
+        showlegend=True,
+        legend=dict(orientation="h", y=-0.1, x=0.1),
+        paper_bgcolor='rgba(0,0,0,0)',
+        font_color='#5a7d9a'
     )
     return fig
 
 def create_box_plot(df):
     fig = go.Figure()
-    departments = df['department'].unique()[:8]
-    colors = ['#7acce0', '#8fc9a8', '#e8c38a', '#e8aa8a', '#c5a8e0', '#a8d5e8', '#d4e8a8', '#e8c5a8']
+    departments = df['department'].unique()[:5]
+    colors = ['#7acce0', '#a8e6cf', '#fff8e7', '#ffe6f0', '#b8dff0']
     
     for i, dept in enumerate(departments):
         dept_data = df[df['department'] == dept]['marks']
@@ -478,10 +426,10 @@ def create_box_plot(df):
         ))
     
     fig.update_layout(
-        title="<b>Department-wise Performance Distribution</b>",
-        title_font_color='#3a7ca5',
+        title="<b>Departmental Spread (Box Plot)</b>",
+        title_font=dict(size=16, color='#3a7ca5'),
         yaxis_title="Marks",
-        height=400,
+        height=350,
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
@@ -491,95 +439,54 @@ def create_box_plot(df):
 
 def create_radar_chart(df):
     dept_stats = df.groupby('department').agg({
-        'marks': ['mean', lambda x: (x >= 40).mean() * 100, lambda x: (x >= 75).mean() * 100]
+        'marks': ['mean', lambda x: (x >= 40).mean() * 100]
     }).round(2)
-    dept_stats.columns = ['avg_marks', 'pass_rate', 'distinction_rate']
-    dept_stats = dept_stats.head(6)
+    dept_stats.columns = ['avg_marks', 'pass_rate']
+    dept_stats = dept_stats.head(5)
     
-    colors = ['#7acce0', '#8fc9a8', '#e8c38a', '#e8aa8a', '#c5a8e0', '#a8d5e8']
+    colors = ['#7acce0', '#a8e6cf', '#fff8e7', '#ffe6f0', '#b8dff0']
     fig = go.Figure()
     
     for i, dept in enumerate(dept_stats.index):
         fig.add_trace(go.Scatterpolar(
-            r=[dept_stats.loc[dept, 'avg_marks'], 
-               dept_stats.loc[dept, 'pass_rate'],
-               dept_stats.loc[dept, 'distinction_rate']],
-            theta=['Average Marks', 'Pass Rate', 'Distinction Rate'],
+            r=[dept_stats.loc[dept, 'avg_marks'], dept_stats.loc[dept, 'pass_rate'], dept_stats.loc[dept, 'avg_marks'] * 1.1],
+            theta=['Avg Marks', 'Pass Rate', 'Efficiency'],
             fill='toself',
             name=dept,
             line_color=colors[i % len(colors)]
         ))
     
     fig.update_layout(
-        polar=dict(
-            radialaxis=dict(visible=True, range=[0, 100], tickfont_color='#5a8bb5'),
-            bgcolor='rgba(0,0,0,0)'
-        ),
-        title="<b>Department Performance Radar Chart</b>",
-        title_font_color='#3a7ca5',
-        height=400,
+        polar=dict(radialaxis=dict(visible=True, range=[0, 100]), bgcolor='rgba(0,0,0,0)'),
+        title="<b>Department Matrix Breakdown</b>",
+        title_font=dict(size=16, color='#3a7ca5'),
+        height=380,
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#5a7d9a'
     )
     return fig
 
 def create_trend_analysis(df):
-    semester_stats = df.groupby('semester')['marks'].agg(['mean', 'std']).reset_index()
+    semester_stats = df.groupby('semester')['marks'].mean().reset_index()
     fig = go.Figure()
     
     fig.add_trace(go.Scatter(
-        x=semester_stats['semester'],
-        y=semester_stats['mean'],
-        mode='lines+markers',
-        name='Average Marks',
+        x=semester_stats['semester'], y=semester_stats['marks'],
+        mode='lines+markers', name='Average Marks',
         line=dict(color='#7acce0', width=3),
-        marker=dict(size=10, color='#e8aa8a')
-    ))
-    
-    z = np.polyfit(semester_stats['semester'], semester_stats['mean'], 1)
-    p = np.poly1d(z)
-    fig.add_trace(go.Scatter(
-        x=semester_stats['semester'],
-        y=p(semester_stats['semester']),
-        mode='lines',
-        name='Trend Line',
-        line=dict(color='#8fc9a8', width=2, dash='dash')
+        marker=dict(size=8, color='#e8aa8a')
     ))
     
     fig.update_layout(
-        title="<b>Performance Trend Across Semesters</b>",
-        title_font_color='#3a7ca5',
-        xaxis_title="Semester",
-        yaxis_title="Average Marks",
-        height=400,
+        title="<b>Academic Timeline Performance Trend</b>",
+        title_font=dict(size=16, color='#3a7ca5'),
+        xaxis_title="Semester", yaxis_title="Average Marks",
+        height=380,
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#5a7d9a'
     )
     return fig
-
-def create_correlation_heatmap(df):
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    if len(numeric_cols) >= 2:
-        corr_matrix = df[numeric_cols].corr()
-        fig = go.Figure(data=go.Heatmap(
-            z=corr_matrix.values,
-            x=corr_matrix.columns,
-            y=corr_matrix.index,
-            colorscale='Teal',
-            zmid=0,
-            text=corr_matrix.values.round(2),
-            texttemplate='%{text}',
-            textfont={"size": 10, "color": "#2c5f8a"}
-        ))
-        fig.update_layout(
-            title="<b>Feature Correlation Heatmap</b>",
-            title_font_color='#3a7ca5',
-            height=350,
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        return fig
-    return None
 
 def create_performance_prediction(df):
     forecast, trend = generate_trend_forecast(df)
@@ -590,60 +497,38 @@ def create_performance_prediction(df):
         x=list(semester_avg.index) + [max(semester_avg.index) + 1],
         y=list(semester_avg.values) + [forecast],
         mode='lines+markers',
-        name='Historical & Forecast',
+        name='Trajectory Plan',
         line=dict(color='#7acce0', width=3),
-        marker=dict(size=10, color=['#7acce0']*len(semester_avg) + ['#e8c38a'])
+        marker=dict(size=8, color=['#7acce0']*len(semester_avg) + ['#e8c38a'])
     ))
     
     fig.update_layout(
-        title="<b>Performance Prediction for Next Semester</b>",
-        title_font_color='#3a7ca5',
-        xaxis_title="Semester",
-        yaxis_title="Average Marks",
-        height=400,
+        title="<b>Next Term Forward Forecast Model</b>",
+        title_font=dict(size=16, color='#3a7ca5'),
+        xaxis_title="Semester", yaxis_title="Average Marks",
+        height=380,
+        plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)',
         font_color='#5a7d9a'
     )
     return fig, forecast, trend
 
-def create_performance_score_card(score):
-    color = "#8fc9a8" if score >= 75 else "#e8c38a" if score >= 60 else "#e8aaaa"
-    st.markdown(f"""
-        <div class='metric-card'>
-            <h3 style='margin:0; color:#8aaec9;'>🎯 Overall Performance Score</h3>
-            <h1 style='margin:0; color:{color}; font-size: 3rem;'>{score:.1f}</h1>
-            <p style='margin:0;'>out of 100</p>
-            <div style='width:100%; background:#e8f0f5; border-radius:10px; margin-top:10px;'>
-                <div style='width:{score}%; background:{color}; height:10px; border-radius:10px;'></div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
 def create_alert_system(df):
     alerts = []
     pass_rate = (df['marks'] >= 40).mean() * 100
     if pass_rate < 75:
-        alerts.append(("⚠️", "Notice", f"Pass rate is {pass_rate:.1f}% - Below target of 75%", "medium"))
+        alerts.append(("⚠️", "Notice", f"Pass rate is running at {pass_rate:.1f}% (Under Target Margin).", "medium"))
     
     course_fail_rates = df.groupby('course_name').apply(lambda x: (x['marks'] < 40).mean() * 100)
     critical_courses = course_fail_rates[course_fail_rates > 30]
     if len(critical_courses) > 0:
-        alerts.append(("📚", "Attention", f"{len(critical_courses)} courses have >30% failure rate", "high"))
-    
-    outliers, _, _ = identify_outliers(df)
-    if len(outliers) > len(df) * 0.05:
-        alerts.append(("📊", "Info", f"Found {len(outliers)} outlier marks that may need review", "low"))
-    
-    forecast, trend = generate_trend_forecast(df)
-    if trend < 0:
-        alerts.append(("📉", "Trend Alert", "Overall performance trend is declining", "medium"))
+        alerts.append(("📚", "Attention", f"{len(critical_courses)} specific evaluation tracks show structural risks.", "high"))
     
     return alerts
 
 # ============================================================================
 # MAIN APPLICATION
 # ============================================================================
-
 def main():
     clock_placeholder = st.empty()
     
@@ -666,9 +551,7 @@ def main():
         menu_title=None,
         options=["Dashboard", "Course Analytics", "Department Insights", "Predictive Analytics", "Reports"],
         icons=["house", "book", "building", "graph-up", "file-text"],
-        menu_icon="cast",
-        default_index=0,
-        orientation="horizontal",
+        menu_icon="cast", default_index=0, orientation="horizontal",
         styles={
             "container": {"padding": "0!important", "background-color": "#ffffff", "border-radius": "12px", "box-shadow": "0 2px 8px rgba(0,0,0,0.03)"},
             "icon": {"color": "#7acce0", "font-size": "18px"},
@@ -680,7 +563,6 @@ def main():
     with st.sidebar:
         st.image("https://img.icons8.com/color/96/000000/analytics.png", width=80)
         st.markdown("## 🎯 Control Panel")
-        
         use_db = st.radio("Data Source", ["📊 Sample Data", "📡 Live Database"], index=0)
         
         if use_db == "📡 Live Database":
@@ -695,154 +577,55 @@ def main():
                         if st.button("🚀 Load Data", use_container_width=True):
                             df_raw, rows = load_examination_data(conn, selected_table)
                             if df_raw is not None:
-                                df = process_examination_data(df_raw)
-                                st.session_state['exam_data'] = df
-                                st.success(f"✅ Loaded {rows:,} records!")
+                                st.session_state['exam_data'] = process_examination_data(df_raw)
                                 st.rerun()
                 except Exception as e:
                     st.error(f"Database error: {str(e)}")
             else:
-                st.warning("⚠️ Cannot connect to database. Using sample data instead.")
+                st.warning("⚠️ Cannot connect. Falling back to Sample Engine.")
                 use_db = "📊 Sample Data"
         
-        if st.button("📊 Generate Sample Data", use_container_width=True):
+        if st.button("📊 Generate Sample Data", use_container_width=True) or 'exam_data' not in st.session_state:
             np.random.seed(42)
-            departments = ['Computer Science', 'Information Technology', 'Data Science', 'Artificial Intelligence', 'Business Administration']
-            courses = [f"CS{101+i}" for i in range(25)] + [f"IT{201+i}" for i in range(20)] + [f"DS{301+i}" for i in range(15)]
+            departments = ['Computer Science', 'Information Technology', 'Data Science', 'Artificial Intelligence', 'Business Admin']
+            courses = [f"CS-{101+i}" for i in range(15)] + [f"DS-{301+i}" for i in range(10)]
             
             data = []
-            for i in range(6000):
+            for i in range(4000):
                 data.append({
                     'student_id': f"S{np.random.randint(1000, 9999)}",
                     'course_name': np.random.choice(courses),
                     'department': np.random.choice(departments),
                     'semester': np.random.randint(1, 9),
-                    'marks': np.random.normal(65, 15)
+                    'marks': np.random.normal(67, 13)
                 })
             df_sample = pd.DataFrame(data)
             df_sample['marks'] = df_sample['marks'].clip(0, 100)
-            df = process_examination_data(df_sample)
-            st.session_state['exam_data'] = df
-            st.success("✅ Generated 6,000 sample records!")
-            st.rerun()
-        
-        st.markdown("---")
-        
-        if 'exam_data' in st.session_state:
-            df = st.session_state['exam_data']
-            st.markdown("### 🔍 Smart Filters")
-            
-            search = st.text_input("🔎 Search Student/Course", placeholder="Type to search...")
-            depts = ['All'] + sorted(df['department'].unique().tolist())
-            filter_dept = st.selectbox("Department", depts)
-            sems = ['All'] + sorted(df['semester'].unique().tolist())
-            filter_sem = st.selectbox("Semester", sems)
-            
-            # Formulate the working dataframe based on selections
-            filtered_df = df.copy()
-            if filter_dept != 'All':
-                filtered_df = filtered_df[filtered_df['department'] == filter_dept]
-            if filter_sem != 'All':
-                filtered_df = filtered_df[filtered_df['semester'] == int(filter_sem)]
-            if search:
-                filtered_df = filtered_df[
-                    filtered_df['student_id'].str.contains(search, case=False, na=False) |
-                    filtered_df['course_name'].str.contains(search, case=False, na=False)
-                ]
-        else:
-            st.info("💡 Please generate sample data or load from a live database in the control panel to begin.")
-            return
+            st.session_state['exam_data'] = process_examination_data(df_sample)
 
-    # ============================================================================
-    # NAVIGATION ROUTING & VIEWS
-    # ============================================================================
+        df = st.session_state['exam_data']
+        st.markdown("### 🔍 Smart Filters")
+        search = st.text_input("🔎 Search Track ID", placeholder="Search course/student...")
+        filter_dept = st.selectbox("Department Filter", ['All'] + sorted(df['department'].unique().tolist()))
+        filter_sem = st.selectbox("Semester Filter", ['All'] + sorted(df['semester'].unique().tolist()))
+        
+        filtered_df = df.copy()
+        if filter_dept != 'All':
+            filtered_df = filtered_df[filtered_df['department'] == filter_dept]
+        if filter_sem != 'All':
+            filtered_df = filtered_df[filtered_df['semester'] == int(filter_sem)]
+        if search:
+            filtered_df = filtered_df[
+                filtered_df['student_id'].str.contains(search, case=False, na=False) |
+                filtered_df['course_name'].str.contains(search, case=False, na=False)
+            ]
+
+    # Calculate Data States
     metrics = calculate_advanced_metrics(filtered_df)
     perf_score = calculate_performance_score(filtered_df)
     
+    # ============================================================================
+    # VIEW MAPPING
+    # ============================================================================
     if selected == "Dashboard":
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.markdown(f"<div class='metric-card'><h3>📊 Total Enrollments</h3><h2>{len(filtered_df):,}</h2><p>Active Students</p></div>", unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"<div class='metric-card'><h3>📈 Average Score</h3><h2>{metrics['avg_marks']:.1f}</h2><p>Class Mean</p></div>", unsafe_allow_html=True)
-        with col3:
-            st.markdown(f"<div class='metric-card'><h3>🟢 Pass Rate</h3><h2>{metrics['pass_rate']:.1f}%</h2><p>Target: 75%</p></div>", unsafe_allow_html=True)
-        with col4:
-            create_performance_score_card(perf_score)
-            
-        st.markdown("### 🚨 System Insights & Alerts")
-        alerts = create_alert_system(filtered_df)
-        if alerts:
-            for icon, title, msg, level in alerts:
-                if level == "high": st.error(f"{icon} **{title}**: {msg}")
-                elif level == "medium": st.warning(f"{icon} **{title}**: {msg}")
-                else: st.info(f"{icon} **{title}**: {msg}")
-        else:
-            st.success("✅ All tracking parameters are within stable operational limits.")
-
-        g1, g2 = st.columns([1, 1])
-        with g1:
-            st.plotly_chart(create_advanced_donut_chart(filtered_df), use_container_width=True)
-        with g2:
-            st.plotly_chart(create_box_plot(filtered_df), use_container_width=True)
-
-    elif selected == "Course Analytics":
-        st.subheader("📚 Subject Performance Mapping")
-        course_summary = filtered_df.groupby('course_name').agg({
-            'student_id': 'count',
-            'marks': ['mean', 'max', 'min']
-        }).reset_index()
-        course_summary.columns = ['Course', 'Students', 'Average', 'Highest', 'Lowest']
-        
-        st.dataframe(course_summary.style.background_gradient(cmap='BuPu', subset=['Average']), use_container_width=True)
-        
-        fig_bar = px.bar(course_summary.sort_values(by='Average', ascending=False).head(15), 
-                         x='Course', y='Average', color='Average',
-                         color_continuous_scale='Teal', title="Top 15 Courses by Average Mark")
-        fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color='#5a7d9a')
-        st.plotly_chart(fig_bar, use_container_width=True)
-
-    elif selected == "Department Insights":
-        st.subheader("🏢 Cross-Departmental Matrix Evaluation")
-        d1, d2 = st.columns(2)
-        with d1:
-            st.plotly_chart(create_radar_chart(filtered_df), use_container_width=True)
-        with d2:
-            st.plotly_chart(create_trend_analysis(filtered_df), use_container_width=True)
-
-    elif selected == "Predictive Analytics":
-        st.subheader("🔮 Predictive Diagnostics & Trend Projections")
-        p1, p2 = st.columns([2, 1])
-        with p1:
-            fig_pred, forecast, trend = create_performance_prediction(filtered_df)
-            st.plotly_chart(fig_pred, use_container_width=True)
-        with p2:
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            st.plotly_chart(create_gauge_chart(forecast, "Next Semester Forecast"), use_container_width=True)
-            if trend < 0:
-                st.error(f"📉 Declining trajectory detected: Class metrics dropping by {abs(trend):.2f} pts/sem.")
-            else:
-                st.success(f"📈 Upward trajectory stable: Incremental rise of {trend:.2f} pts/sem.")
-
-    elif selected == "Reports":
-        st.subheader("📋 Structural Data Extraction Matrix")
-        st.markdown("Download generated data subsets below.")
-        st.dataframe(filtered_df.head(100), use_container_width=True)
-        
-        csv = filtered_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Export Filtered Dataset as CSV",
-            data=csv,
-            file_name=f'CBT_Analytics_{datetime.now().strftime("%Y%m%d")}.csv',
-            mime='text/csv',
-            use_container_width=True
-        )
-
-    st.markdown("""
-        <div class='footer'>
-            <p><strong>CBT Examination Analytics Platform</strong> | Powered by Streamlit & Python Data Science Infrastructure</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+        col1, col2, col3, col4 = st.columns(
