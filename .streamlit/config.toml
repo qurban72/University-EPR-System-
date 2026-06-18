@@ -1,6 +1,6 @@
 [theme]
-primaryColor = "#4A90E2"          # Clean Blue color (Buttons aur active links ke liye)
-backgroundColor = "#0F172A"      # Slate Dark Background
-secondaryBackgroundColor = "#1E293B" # Sidebar aur cards ke liye thoda light dark
-textColor = "#F8FAFC"            # Pure White text
-font = "sans serif"              # Clean modern font
+primaryColor = "#2563EB"          # Professional Royal Blue
+backgroundColor = "#F8FAFC"      # Off-White background (aankhon ko chubhta nahi hai)
+secondaryBackgroundColor = "#FFFFFF" # Pure White sidebar aur containers
+textColor = "#0F172A"            # Dark charcoal text
+font = "sans serif"
