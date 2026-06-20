@@ -209,7 +209,7 @@ h2, h3, h4, h5, h6 {
         border: 1px solid #e2e8f0;
         border-radius: 12px;
         padding: 24px 40px;
-        margin-top: 24px;
+        margin-top: 0px;
         text-align: center;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     }
@@ -1290,27 +1290,188 @@ def main():
 </p>
             </div>
         """, unsafe_allow_html=True)
-    
-    # Footer
+
+# ============================================================================
+# FOOTER FUNCTION - DEFINED OUTSIDE main()
+# ============================================================================
+
+def display_footer():
+    """Display the footer at the bottom of the page"""
     st.markdown("""
-<div class="footer">
-    <div class="footer-title">🏛️ Technify University ERP</div>
-    <div class="footer-sub">Data Science Team 1 &nbsp;·&nbsp; Module 3 — Examination Analytics Dashboard &nbsp;·&nbsp; Powered by Supabase PostgreSQL</div>
-   <div style="margin-top:8px;">
-        <span class="footer-badge">📊 Exam Performance Analytics</span>
-        <span class="footer-badge">📈 Pass/Fail Insights</span>
-        <span class="footer-badge">🎓 Course & Semester Analysis</span>
-        <span class="footer-badge">🏛️ Department Intelligence</span>
-        <span class="footer-badge">🔮 Predictive Analytics</span>
+    <style>
+        /* ── FOOTER STYLES ── */
+        .footer-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px 40px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+            width: 100%;
+        }
+        .footer-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 4px;
+        }
+        .footer-sub {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin: 4px 0;
+        }
+        .footer-badge {
+            display: inline-block;
+            background: rgba(79, 70, 229, 0.05);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            color: #4f46e5;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin: 8px 4px 0 4px;
+        }
+        
+        /* Developer Card */
+        .dev-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .dev-card-left {
+            padding: 16px 20px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+        }
+        .dev-card-right {
+            padding: 16px 20px;
+            background: #ffffff;
+        }
+        .dev-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin: 0 0 10px 0;
+        }
+        .dev-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 5px 0;
+        }
+        .dev-detail {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0 0 3px 0;
+        }
+        .dev-link {
+            font-size: 12px;
+            color: #4f46e5;
+            text-decoration: none;
+        }
+        .dev-link:hover {
+            text-decoration: underline;
+        }
+        .dev-footer {
+            margin-top: 10px;
+            padding: 10px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .dev-footer-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .dev-copyright {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .dev-divider {
+            color: #e2e8f0;
+        }
+        .footer-hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 2rem 0 1.5rem 0;
+            width: 100%;
+        }
+    </style>
+
+    <div class="dev-card">
+        <div class="dev-card-left">
+            <p class="dev-label">Developer</p>
+            <p class="dev-name">Syeda Samia</p>
+            <p class="dev-detail"><p class="dev-detail">🐍 Python Developer | 📊 Junior Data Scientist</p></p>
+            <p class="dev-detail">📍 Hyderabad, Pakistan</p>
+        </div>
+        <div class="dev-card-right">
+            <p class="dev-label">Internship</p>
+            <p class="dev-name">Technify Institute</p>
+            <p class="dev-detail">🪪 ID: Tech-DS-110-26</p>
+            <p class="dev-detail">📊 Data Science Internship · Module 3</p>
+        </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
-    
+
+    <div class="dev-footer">
+        <div class="dev-footer-left">
+            <a href="https://github.com/syeda-samia" target="_blank" class="dev-link">
+                🐙 github.com/Syeda-Samia
+            </a>
+            <span class="dev-divider">|</span>
+            <a href="https://www.linkedin.com/in/syeda-samia-836960319/" target="_blank" class="dev-link">
+                💼 linkedin.com/in/Syeda-Samia
+            </a>
+        </div>
+        <span class="dev-copyright">© 2026 Syeda Samia · All rights reserved</span>
+                
+    </div>
+    <div class="footer-container">
+        <div class="footer-title">🏛️ Technify University ERP</div>
+        <div class="footer-sub">
+            Data Science Team 1 &nbsp;·&nbsp; Module 3 — Examination Analytics Dashboard &nbsp;·&nbsp;
+            Powered by Supabase PostgreSQL
+        </div>
+        <div style="margin-top:8px;">
+            <span class="footer-badge">📊 Exam Performance Analytics</span>
+            <span class="footer-badge">📈 Pass/Fail Insights</span>
+            <span class="footer-badge">🎓 Course & Semester Analysis</span>
+            <span class="footer-badge">🏛️ Department Intelligence</span>
+            <span class="footer-badge">🔮 Predictive Analytics</span>
+        </div>
+    </div>
+
+    <hr class="footer-hr">
+
+    """, unsafe_allow_html=True)
+
+# ============================================================================
+# RUN THE APPLICATION
+# ============================================================================
+
 if __name__ == "__main__":
     main()
+    display_footer()  # Footer is displayed AFTER main content
 
 
 
-
-# ---------------------------------------
 
